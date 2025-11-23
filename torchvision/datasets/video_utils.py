@@ -214,7 +214,7 @@ class VideoClips:
 
         total_frames = len(video_pts) * frame_rate / fps
         
-        # EDIT by Jiayi Liu for dynamic frame rates begin
+        # EDIT for dynamic frame rates begin
         if(total_frames < num_frames):
             #Calculate video duration
             video_duration = len(video_pts) / fps
