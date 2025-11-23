@@ -7,7 +7,8 @@ We ran refactor_dataset.py with appropriate main() directory names to build the 
 # Clean Dataset
 We used check_videos.py, a generated script, to check and clean for corrupted videos
 
-
+# Note on dynamic frame selection
+We modified torchvision/datasets/video_utils.py
 
 # To train the model: 
 
