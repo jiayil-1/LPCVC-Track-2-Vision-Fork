@@ -211,7 +211,22 @@ class VideoClips:
             fps = 1
         if frame_rate is None:
             frame_rate = fps
+
         total_frames = len(video_pts) * frame_rate / fps
+        
+        # EDIT by Jiayi Liu for dynamic frame rates begin
+        if(total_frames < num_frames):
+            #Calculate video duration
+            video_duration = len(video_pts) / fps
+            
+            total_frames = num_frames
+            frame_rate = math.ceil(num_frames / video_duration); 
+            
+        
+
+        
+        # EDIT end
+        
         _idxs = VideoClips._resample_video_idx(int(math.floor(total_frames)), fps, frame_rate)
         video_pts = video_pts[_idxs]
         clips = unfold(video_pts, num_frames, step)
