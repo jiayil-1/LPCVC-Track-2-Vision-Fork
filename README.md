@@ -1,15 +1,15 @@
 # LPCVC-Track-2
 
-#Preprocessing Dataset
+# Preprocessing Dataset
 We ran refactor_dataset.py with appropriate main() directory names to build the dataset 
 
 
-#Clean Dataset
+# Clean Dataset
 We used check_videos.py, a generated script, to check and clean for corrupted videos
 
 
 
-#To train the model: 
+# To train the model: 
 
 run train.py with appropriate arguments for 
   
@@ -25,11 +25,11 @@ run train.py with appropriate arguments for
 
   
   
-#More details on parameters can be found in train.py in the ArgParse
+# More details on parameters can be found in train.py in the ArgParse
 
 
 
-#To validate the model: 
+# To validate the model: 
 
 run train.py with --test-only and --resume
 
