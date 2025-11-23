@@ -11,7 +11,7 @@ We used check_videos.py, a generated script, to check and clean for corrupted vi
 
 # To train the model: 
 
-run train.py with appropriate arguments for 
+run references/video_classification/train.py, with appropriate arguments for 
   
   --data-path(path to dataset root, being root/ train|val / action categories
   
