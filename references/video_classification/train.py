@@ -37,8 +37,6 @@ def train_one_epoch(model, criterion, optimizer, lr_scheduler, data_loader, devi
         else:
             loss.backward()
             optimizer.step()
-        print("Output shape:", output.shape)
-        print("Target shape:", target.shape)
        
         acc1, acc5 = utils.accuracy(output, target, topk=(1, 5))
         batch_size = video.shape[0]
@@ -93,7 +91,7 @@ def evaluate(model, criterion, data_loader, device):
     if (
         hasattr(data_loader.dataset, "__len__")
         and num_data_from_sampler != num_processed_samples
-        # and torch.distributed.get_rank() == 0
+        and torch.distributed.get_rank() == 0
     ):
         # See FIXME above
         warnings.warn(
@@ -111,7 +109,10 @@ def evaluate(model, criterion, data_loader, device):
         )
     )
     # Reduce the agg_preds and agg_targets from all gpu and show result
-    
+    agg_preds = utils.reduce_across_processes(agg_preds)
+    agg_targets = utils.reduce_across_processes(agg_targets, op=torch.distributed.ReduceOp.MAX)
+    agg_acc1, agg_acc5 = utils.accuracy(agg_preds, agg_targets, topk=(1, 5))
+    print(" * Video Acc@1 {acc1:.3f} Video Acc@5 {acc5:.3f}".format(acc1=agg_acc1, acc5=agg_acc5))
     return metric_logger.acc1.global_avg
 
 
@@ -159,6 +160,7 @@ def main(args):
     st = time.time()
     cache_path = _get_cache_path(train_dir, args)
     transform_train = presets.VideoClassificationPresetTrain(crop_size=train_crop_size, resize_size=train_resize_size)
+    
     if args.cache_dataset and os.path.exists(cache_path):
         print(f"Loading dataset_train from {cache_path}")
         dataset, _ = torch.load(cache_path, weights_only=False)
@@ -257,7 +259,7 @@ def main(args):
         model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
     model.fc = nn.Linear(model.fc.in_features, num_classes)
 
-    #layer freezing 
+    #optional layer freezing for faster training 
     for name, param in model.named_parameters():
         if not name.startswith("layer4") and not name.startswith("fc"):
             param.requires_grad = False
@@ -300,7 +302,7 @@ def main(args):
     if args.distributed:
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
         model_without_ddp = model.module
-    #Weights_only to False because True gave error on cached dataset
+    #We set weights_only to False because True gave error on cached dataset
     if args.resume:
         checkpoint = torch.load(args.resume, map_location="cpu", weights_only=False)
         model_without_ddp.load_state_dict(checkpoint["model"])
