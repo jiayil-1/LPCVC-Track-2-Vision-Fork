@@ -1,5 +1,9 @@
 # LPCVC-Track-2
 
+# Modified pytorch/vision Files
+references/video_classification/train.py
+torchvision/datasets/video_utils.py
+
 # Preprocessing QEVD Dataset
 We ran refactor_dataset.py with appropriate main() directory names to build the formatted QEVD dataset 
 
@@ -7,8 +11,8 @@ We ran refactor_dataset.py with appropriate main() directory names to build the 
 # Clean Dataset
 We used check_videos.py, a generated script, to check and clean for corrupted videos
 
-# Note on dynamic frame selection
-We modified torchvision/datasets/video_utils.py
+# Dynamic frame selection
+We modified compute_video_clip() in torchvision/datasets/video_utils.py to implement dynamic frame selection
 
 # To train the model: 
 
