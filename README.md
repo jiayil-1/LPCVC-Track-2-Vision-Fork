@@ -1,7 +1,7 @@
 # LPCVC-Track-2
 
-# Preprocessing Dataset
-We ran refactor_dataset.py with appropriate main() directory names to build the dataset 
+# Preprocessing QEVD Dataset
+We ran refactor_dataset.py with appropriate main() directory names to build the formatted QEVD dataset 
 
 
 # Clean Dataset
