@@ -25,7 +25,7 @@ run references/video_classification/train.py, with appropriate arguments for
   --cache-dataset(caches processed dataset videos, saves time)
 
   
-**  More details on parameters can be found in train.py in the ArgParse**
+**More details on parameters can be found in train.py in the ArgParse**
 
 
 
