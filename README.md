@@ -2,7 +2,10 @@
 
 This repository contains the solution for LPCVC 2025 Track 2: Video Classification with Dynamic Frame Selection. Our approach modifies PyTorch Vision's video classification pipeline to handle the QEVD dataset with optimized frame sampling.
 
-
+## :fire: Overview
+- Modified `pytorch/vision` for dynamic frame selection
+- Implemented dataset preprocessing utilities for QEVD
+- Added video validation and corruption checking tools
 ---
 
 ## 1. Modified Files :memo:
