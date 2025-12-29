@@ -6,6 +6,7 @@ This repository contains the solution for LPCVC 2025 Track 2: Video Classificati
 - Modified `pytorch/vision` for dynamic frame selection
 - Implemented dataset preprocessing utilities for QEVD
 - Added video validation and corruption checking tools
+- Trained sample solution 
 ---
 
 ## 1. Modified Files :memo:
