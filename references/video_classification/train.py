@@ -2,6 +2,8 @@ import datetime
 import os
 import time
 import warnings
+
+
 import presets
 import torch
 import torch.utils.data
@@ -13,11 +15,13 @@ from torch.utils.data.dataloader import default_collate
 from torchvision.datasets.samplers import DistributedSampler, RandomClipSampler, UniformClipSampler
 from datasets import KineticsWithVideoId
 
+
 def train_one_epoch(model, criterion, optimizer, lr_scheduler, data_loader, device, epoch, print_freq, scaler=None):
     model.train()
     metric_logger = utils.MetricLogger(delimiter="  ")
     metric_logger.add_meter("lr", utils.SmoothedValue(window_size=1, fmt="{value}"))
     metric_logger.add_meter("clips/s", utils.SmoothedValue(window_size=10, fmt="{value:.3f}"))
+
 
     header = f"Epoch: [{epoch}]"
     for video, _, target, _ in metric_logger.log_every(data_loader, print_freq, header):
@@ -27,7 +31,9 @@ def train_one_epoch(model, criterion, optimizer, lr_scheduler, data_loader, devi
             output = model(video)
             loss = criterion(output, target)
 
+
         optimizer.zero_grad()
+
 
         if scaler is not None:
             scaler.scale(loss).backward()
@@ -46,7 +52,9 @@ def train_one_epoch(model, criterion, optimizer, lr_scheduler, data_loader, devi
         lr_scheduler.step()
 
 
-def evaluate(model, criterion, data_loader, device):
+
+
+def evaluate(model, criterion, data_loader, num_classes, device):
     model.eval()
     metric_logger = utils.MetricLogger(delimiter="  ")
     header = "Test:"
@@ -54,7 +62,7 @@ def evaluate(model, criterion, data_loader, device):
     # Group and aggregate output of a video
     num_videos = len(data_loader.dataset.samples)
     print(f'Evaluating {num_videos} videos\n')
-    num_classes = len(data_loader.dataset.classes)
+    #num_classes = len(data_loader.dataset.classes)
     agg_preds = torch.zeros((num_videos, num_classes), dtype=torch.float32, device=device)
     agg_targets = torch.zeros((num_videos), dtype=torch.int32, device=device)
     with torch.inference_mode():
@@ -64,12 +72,14 @@ def evaluate(model, criterion, data_loader, device):
             output = model(video)
             loss = criterion(output, target)
 
+
             # Use softmax to convert output into prediction probability
             preds = torch.softmax(output, dim=1)
             for b in range(video.size(0)):
                 idx = video_idx[b].item()
                 agg_preds[idx] += preds[b].detach()
                 agg_targets[idx] = target[b].detach().item()
+
 
             acc1, acc5 = utils.accuracy(output, target, topk=(1, 5))
             # FIXME need to take into account that the datasets
@@ -87,6 +97,7 @@ def evaluate(model, criterion, data_loader, device):
     else:
         num_data_from_sampler = len(data_loader.sampler)
 
+
     if (
         hasattr(data_loader.dataset, "__len__")
         and num_data_from_sampler != num_processed_samples
@@ -100,7 +111,9 @@ def evaluate(model, criterion, data_loader, device):
             "Setting the world size to 1 is always a safe bet."
         )
 
+
     metric_logger.synchronize_between_processes()
+
 
     print(
         " * Clip Acc@1 {top1.global_avg:.3f} Clip Acc@5 {top5.global_avg:.3f}".format(
@@ -115,8 +128,11 @@ def evaluate(model, criterion, data_loader, device):
     return metric_logger.acc1.global_avg
 
 
+
+
 def _get_cache_path(filepath, args):
     import hashlib
+
 
     value = f"{filepath}-{args.clip_len}-{args.kinetics_version}-{args.frame_rate}"
     h = hashlib.sha1(value.encode()).hexdigest()
@@ -125,25 +141,33 @@ def _get_cache_path(filepath, args):
     return cache_path
 
 
+
+
 def collate_fn(batch):
     # remove audio from the batch
     return default_collate(batch)
+
+
 
 
 def main(args):
     if args.output_dir:
         utils.mkdir(args.output_dir)
 
+
     utils.init_distributed_mode(args)
     print(args)
 
+
     device = torch.device(args.device)
+
 
     if args.use_deterministic_algorithms:
         torch.backends.cudnn.benchmark = False
         torch.use_deterministic_algorithms(True)
     else:
         torch.backends.cudnn.benchmark = True
+
 
     # Data loading code
     print("Loading data")
@@ -152,8 +176,10 @@ def main(args):
     train_resize_size = tuple(args.train_resize_size)
     train_crop_size = tuple(args.train_crop_size)
 
+
     train_dir = os.path.join(args.data_path, "train")
     val_dir = os.path.join(args.data_path, "val")
+
 
     print("Loading training data")
     st = time.time()
@@ -171,7 +197,7 @@ def main(args):
             args.data_path,
             frames_per_clip=args.clip_len,
             num_classes=args.kinetics_version,
-            split="train",
+            split="val", #train
             step_between_clips=1,
             transform=transform_train,
             frame_rate=args.frame_rate,
@@ -186,16 +212,19 @@ def main(args):
             utils.mkdir(os.path.dirname(cache_path))
             utils.save_on_master((dataset, train_dir), cache_path)
 
+
     print("Took", time.time() - st)
+
 
     print("Loading validation data")
     cache_path = _get_cache_path(val_dir, args)
-
+    
     if args.weights and args.test_only:
         weights = torchvision.models.get_weight(args.weights)
         transform_test = weights.transforms()
     else:
         transform_test = presets.VideoClassificationPresetEval(crop_size=val_crop_size, resize_size=val_resize_size)
+
 
     if args.cache_dataset and os.path.exists(cache_path):
         print(f"Loading dataset_test from {cache_path}")
@@ -208,7 +237,7 @@ def main(args):
             args.data_path,
             frames_per_clip=args.clip_len,
             num_classes=args.kinetics_version,
-            split="val",
+            split="val", #"test",#
             step_between_clips=1,
             transform=transform_test,
             frame_rate=args.frame_rate,
@@ -232,6 +261,7 @@ def main(args):
         train_sampler = DistributedSampler(train_sampler)
         test_sampler = DistributedSampler(test_sampler, shuffle=False)
 
+
     data_loader = torch.utils.data.DataLoader(
         dataset,
         batch_size=args.batch_size,
@@ -240,6 +270,7 @@ def main(args):
         pin_memory=True,
         collate_fn=collate_fn,
     )
+
 
     data_loader_test = torch.utils.data.DataLoader(
         dataset_test,
@@ -250,6 +281,7 @@ def main(args):
         collate_fn=collate_fn,
     )
 
+
     print("Creating model")
     num_classes = len(dataset.classes)
     model = torchvision.models.get_model(args.model, weights=args.weights)
@@ -258,22 +290,29 @@ def main(args):
         model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
     model.fc = nn.Linear(model.fc.in_features, num_classes)
 
+
     #optional layer freezing for faster training 
     for name, param in model.named_parameters():
         if not name.startswith("layer4") and not name.startswith("fc"):
             param.requires_grad = False
     
+    
+    model_ckpt = torch.load("./model_14.pth")
+    model.load_state_dict(model_ckpt['model'])
     model = model.to(device)
     criterion = nn.CrossEntropyLoss()
 
+
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
     scaler = torch.cuda.amp.GradScaler() if args.amp else None
+
 
     # convert scheduler to be per iteration, not per epoch, for warmup that lasts
     # between different epochs
     iters_per_epoch = len(data_loader)
     lr_milestones = [iters_per_epoch * (m - args.lr_warmup_epochs) for m in args.lr_milestones]
     main_lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=lr_milestones, gamma=args.lr_gamma)
+
 
     if args.lr_warmup_epochs > 0:
         warmup_iters = iters_per_epoch * args.lr_warmup_epochs
@@ -291,11 +330,13 @@ def main(args):
                 f"Invalid warmup lr method '{args.lr_warmup_method}'. Only linear and constant are supported."
             )
 
+
         lr_scheduler = torch.optim.lr_scheduler.SequentialLR(
             optimizer, schedulers=[warmup_lr_scheduler, main_lr_scheduler], milestones=[warmup_iters]
         )
     else:
         lr_scheduler = main_lr_scheduler
+
 
     model_without_ddp = model
     if args.distributed:
@@ -311,12 +352,14 @@ def main(args):
         if args.amp:
             scaler.load_state_dict(checkpoint["scaler"])
 
+
     if args.test_only:
         # We disable the cudnn benchmarking because it can noticeably affect the accuracy
         torch.backends.cudnn.benchmark = False
         torch.backends.cudnn.deterministic = True
-        evaluate(model, criterion, data_loader_test, device=device)
+        evaluate(model, criterion, data_loader_test, num_classes, device=device)
         return
+
 
     print("Start training")
     start_time = time.time()
@@ -339,15 +382,20 @@ def main(args):
             utils.save_on_master(checkpoint, os.path.join(args.output_dir, f"model_{epoch}.pth"))
             utils.save_on_master(checkpoint, os.path.join(args.output_dir, "checkpoint.pth"))
 
+
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
     print(f"Training time {total_time_str}")
 
 
+
+
 def get_args_parser(add_help=True):
     import argparse
 
+
     parser = argparse.ArgumentParser(description="PyTorch Video Classification Training", add_help=add_help)
+
 
     parser.add_argument("--data-path", default="./full_dataset/", type=str, help="dataset path")
     parser.add_argument(
@@ -409,9 +457,11 @@ def get_args_parser(add_help=True):
         "--use-deterministic-algorithms", action="store_true", help="Forces the use of deterministic algorithms only."
     )
 
+
     # distributed training parameters
     parser.add_argument("--world-size", default=1, type=int, help="number of distributed processes")
     parser.add_argument("--dist-url", default="env://", type=str, help="url used to set up distributed training")
+
 
     parser.add_argument(
         "--val-resize-size",
@@ -443,10 +493,14 @@ def get_args_parser(add_help=True):
     )
     parser.add_argument("--weights", default = None, type=str, help="the weights enum name to load")
 
+
     # Mixed precision training parameters
     parser.add_argument("--amp", action="store_true", help="Use torch.cuda.amp for mixed precision training")
 
+
     return parser
+
+
 
 
 if __name__ == "__main__":
