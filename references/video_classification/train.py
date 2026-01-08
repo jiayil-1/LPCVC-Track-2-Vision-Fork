@@ -297,7 +297,7 @@ def main(args):
             param.requires_grad = False
     
     
-    model_ckpt = torch.load("./model_14.pth")
+    model_ckpt = torch.load("./model_14.pth", map_location="cpu", weights_only=False)
     model.load_state_dict(model_ckpt['model'])
     model = model.to(device)
     criterion = nn.CrossEntropyLoss()
