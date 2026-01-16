@@ -1,0 +1,4 @@
+torch
+qai_hub
+qai_hub_models
+onnx_script
