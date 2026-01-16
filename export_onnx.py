@@ -65,30 +65,30 @@ model.eval()
 # -----------------------------
 # 2. (Optional) Wrap forward if your repo returns extra stuff
 # -----------------------------
-class LogitsOnlyWrapper(torch.nn.Module):
-    """
-    Some repos return dicts/tuples (e.g., logits + aux outputs).
-    ONNX export is happiest with a single Tensor output.
-    """
-    def __init__(self, m: torch.nn.Module):
-        super().__init__()
-        self.m = m
+# class LogitsOnlyWrapper(torch.nn.Module):
+#     """
+#     Some repos return dicts/tuples (e.g., logits + aux outputs).
+#     ONNX export is happiest with a single Tensor output.
+#     """
+#     def __init__(self, m: torch.nn.Module):
+#         super().__init__()
+#         self.m = m
 
-    def forward(self, video):
-        out = self.m(video)
-        # Handle common patterns:
-        if isinstance(out, dict):
-            # pick a sensible key; adjust if needed
-            if "logits" in out:
-                return out["logits"]
-            # fallback: first value
-            return next(iter(out.values()))
-        if isinstance(out, (tuple, list)):
-            return out[0]
-        return out
+#     def forward(self, video):
+#         out = self.m(video)
+#         # Handle common patterns:
+#         if isinstance(out, dict):
+#             # pick a sensible key; adjust if needed
+#             if "logits" in out:
+#                 return out["logits"]
+#             # fallback: first value
+#             return next(iter(out.values()))
+#         if isinstance(out, (tuple, list)):
+#             return out[0]
+#         return out
 
-
-export_model = LogitsOnlyWrapper(model).to(device).eval()
+export_model = model
+# export_model = LogitsOnlyWrapper(model).to(device).eval()
 
 
 # -----------------------------
@@ -118,7 +118,7 @@ with torch.no_grad():
     # Try dynamo=True first, fallback to classic exporter if it fails.
     try:
         torch.onnx.export(
-            export_model,
+            export_model ,
             DUMMY_VIDEO,
             onnx_path,
             input_names=["video"],
