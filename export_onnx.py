@@ -2,14 +2,13 @@ import os
 import torch
 from qai_hub_models.models.resnet_2plus1d import Model
 
-# If you're using torchvision's R(2+1)D:
-#   pip install torchvision
 try:
     from torchvision.models.video import r2plus1d_18, R2Plus1D_18_Weights
     TORCHVISION_AVAILABLE = True
 except Exception:
     TORCHVISION_AVAILABLE = False
 
+# MAKE SURE TO RUN THIS FILE FIRST BEFORE compile_and_profile.py IF YOU DO NOT HAVE exported_onnx directory
 
 # -----------------------------
 # 0. Configuration
@@ -21,16 +20,15 @@ device = torch.device("cpu")  # export on CPU to avoid device issues
 os.makedirs(ONNX_DIR, exist_ok=True)
 onnx_path = os.path.join(ONNX_DIR, ONNX_NAME)
 
-# Choose a dummy shape that matches your pipeline:
 # torchvision video models expect (N, C, T, H, W)
 BATCH = 1
 CHANNELS = 3
 T = 8          # frames (set to what your model expects; common is 8, 16, 32)
-H = 112        # common for video resnets is 112x112
+H = 112       
 W = 112
 
+#for proper compile and profile, a dummy input must be given resembling an example input to the model
 DUMMY_VIDEO = torch.randn(BATCH, CHANNELS, T, H, W, dtype=torch.float32, device=device)
-
 
 # -----------------------------
 # 1. Load your model
@@ -45,7 +43,7 @@ def load_model():
             "torchvision not available. Replace load_model() with your own model import."
         )
 
-    # Option A: pretrained torchvision weights (for quick sanity checks)
+    # Option A: pretrained torchvision weights 
     model = r2plus1d_18(weights=R2Plus1D_18_Weights.DEFAULT)
 
     # Option B: your finetuned checkpoint:
@@ -61,7 +59,7 @@ model = load_model().to(device)
 model = model.to(torch.float32)
 model.eval()
 
-
+## commented this out as this may not be needed 
 # -----------------------------
 # 2. (Optional) Wrap forward if your repo returns extra stuff
 # -----------------------------
@@ -94,7 +92,6 @@ export_model = model
 # -----------------------------
 # 3. Export settings
 # -----------------------------
-# For AI Hub, fixed shapes are often simplest. If you want dynamic batch/time, enable below.
 USE_DYNAMIC_AXES = False
 
 dynamic_axes = None
@@ -112,13 +109,13 @@ with torch.no_grad():
     # Always sanity-run once to catch shape/dtype errors early
     y = export_model(DUMMY_VIDEO)
     assert isinstance(y, torch.Tensor), f"Model output must be Tensor for this exporter, got {type(y)}"
-    print(f"Sanity output shape: {tuple(y.shape)}")
+    print(f"Sanity output shape: {tuple(y.shape)}") #should give number of class labels 
 
-    # Prefer opset 18 (matches your example)
     # Try dynamo=True first, fallback to classic exporter if it fails.
+    # will save onnx verison of the model to exported_onnx directory
     try:
         torch.onnx.export(
-            export_model ,
+            export_model,
             DUMMY_VIDEO,
             onnx_path,
             input_names=["video"],
@@ -151,5 +148,6 @@ with torch.no_grad():
             dynamo=False,
         )
         print("Exported with dynamo=False")
+
 
 print("Export complete.")
