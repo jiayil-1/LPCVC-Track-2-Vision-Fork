@@ -1,113 +1,155 @@
-import torch
 import os
-from qai_hub_models.models.openai_clip.model import OpenAIClip
+import torch
+from qai_hub_models.models.resnet_2plus1d import Model
 
-# --- Configuration for File Saving ---
+# If you're using torchvision's R(2+1)D:
+#   pip install torchvision
+try:
+    from torchvision.models.video import r2plus1d_18, R2Plus1D_18_Weights
+    TORCHVISION_AVAILABLE = True
+except Exception:
+    TORCHVISION_AVAILABLE = False
+
+
+# -----------------------------
+# 0. Configuration
+# -----------------------------
 ONNX_DIR = "exported_onnx"
-device = torch.device("cpu") # use CPU to export onnx model to avoid GPU device issues
-# -----------------------------------
+ONNX_NAME = "r2plus1d.onnx"
 
-# -----------------------------
-# 1. Prepare Environment
-# -----------------------------
+device = torch.device("cpu")  # export on CPU to avoid device issues
 os.makedirs(ONNX_DIR, exist_ok=True)
-print(f"Saving ONNX files to directory: {os.path.abspath(ONNX_DIR)}")
+onnx_path = os.path.join(ONNX_DIR, ONNX_NAME)
+
+# Choose a dummy shape that matches your pipeline:
+# torchvision video models expect (N, C, T, H, W)
+BATCH = 1
+CHANNELS = 3
+T = 8          # frames (set to what your model expects; common is 8, 16, 32)
+H = 112        # common for video resnets is 112x112
+W = 112
+
+DUMMY_VIDEO = torch.randn(BATCH, CHANNELS, T, H, W, dtype=torch.float32, device=device)
+
 
 # -----------------------------
-# 2. Dummy inputs
+# 1. Load your model
 # -----------------------------
-DUMMY_IMAGE_INPUT = torch.rand(1, 3, 224, 224, dtype=torch.float32, device=device)
-DUMMY_TEXT_INPUT = torch.randint(0, 49408, (1, 77), dtype=torch.int64, device=device)
+def load_model():
+    """
+    Replace this with your repo's model loading.
+    Goal: return a torch.nn.Module in eval mode, float32, on CPU.
+    """
+    if not TORCHVISION_AVAILABLE:
+        raise RuntimeError(
+            "torchvision not available. Replace load_model() with your own model import."
+        )
+
+    # Option A: pretrained torchvision weights (for quick sanity checks)
+    model = r2plus1d_18(weights=R2Plus1D_18_Weights.DEFAULT)
+
+    # Option B: your finetuned checkpoint:
+    # ckpt = torch.load("path/to/checkpoint.pt", map_location="cpu")
+    # model.load_state_dict(ckpt["state_dict"] if "state_dict" in ckpt else ckpt, strict=True)
+
+    return model
+
+
+print(f"Saving ONNX to: {os.path.abspath(onnx_path)}")
+print("Loading model...")
+model = load_model().to(device)
+model = model.to(torch.float32)
+model.eval()
+
 
 # -----------------------------
-# 3. Load OpenAIClip wrapper and define encoders
+# 2. (Optional) Wrap forward if your repo returns extra stuff
 # -----------------------------
-print("Loading OpenAIClip wrapper model...")
-clip_wrapper_model = OpenAIClip.from_pretrained().to(device)
-clip_wrapper_model.eval()
-
-clip_model = clip_wrapper_model.clip.to(device)
-clip_model = clip_model.to(torch.float32) # convert all model params to float32 type, consistent with input type in compiling and profiling via AIHub
-clip_model.eval()
-
-class ImageEncoderWrapper(torch.nn.Module):
-    def __init__(self, clip_model):
+class LogitsOnlyWrapper(torch.nn.Module):
+    """
+    Some repos return dicts/tuples (e.g., logits + aux outputs).
+    ONNX export is happiest with a single Tensor output.
+    """
+    def __init__(self, m: torch.nn.Module):
         super().__init__()
-        self.visual = clip_model.visual
+        self.m = m
 
-    def forward(self, images):
-        return self.visual(images)
+    def forward(self, video):
+        out = self.m(video)
+        # Handle common patterns:
+        if isinstance(out, dict):
+            # pick a sensible key; adjust if needed
+            if "logits" in out:
+                return out["logits"]
+            # fallback: first value
+            return next(iter(out.values()))
+        if isinstance(out, (tuple, list)):
+            return out[0]
+        return out
 
-class TextEncoderWrapper(torch.nn.Module):
-    def __init__(self, clip_model):
-        super().__init__()
-        self.token_embedding = clip_model.token_embedding
-        self.positional_embedding = clip_model.positional_embedding
-        self.transformer = clip_model.transformer
-        self.ln_final = clip_model.ln_final
-        self.text_projection = clip_model.text_projection
 
-    def forward(self, token_ids):
-        x = self.token_embedding(token_ids)
-        x = x + self.positional_embedding
-        x = x.permute(1, 0, 2)
-        x = self.transformer(x)
-        x = x.permute(1, 0, 2)
-        x = self.ln_final(x)
-        eos_index = token_ids.argmax(dim=-1)
-        x = x[torch.arange(x.shape[0]), eos_index]
-        x = x @ self.text_projection
-        return x
-
-# -----------------------------
-# 4. Create wrapper instances
-# -----------------------------
-image_encoder = ImageEncoderWrapper(clip_model)
-text_encoder = TextEncoderWrapper(clip_model)
-image_encoder.eval()
-text_encoder.eval()
+export_model = LogitsOnlyWrapper(model).to(device).eval()
 
 
 # -----------------------------
-# 5. Export Image Encoder
+# 3. Export settings
 # -----------------------------
-image_onnx_path = os.path.join(ONNX_DIR, "image_encoder.onnx")
-print(f"\nExporting Image Encoder to {image_onnx_path}...")
+# For AI Hub, fixed shapes are often simplest. If you want dynamic batch/time, enable below.
+USE_DYNAMIC_AXES = False
 
-torch.onnx.export(
-    image_encoder,
-    DUMMY_IMAGE_INPUT,
-    image_onnx_path,
-    input_names=["image"],
-    output_names=["embedding"],
-    opset_version=18,
-    do_constant_folding=True,
-    dynamic_axes=None,
-    verbose=False,
-    export_params=True,
-    training=torch.onnx.TrainingMode.EVAL,
-    dynamo=True,
-)
+dynamic_axes = None
+if USE_DYNAMIC_AXES:
+    dynamic_axes = {
+        "video": {0: "batch", 2: "time"},
+        "logits": {0: "batch"},
+    }
 
 # -----------------------------
-# 6. Export Text Encoder
+# 4. Export
 # -----------------------------
-text_onnx_path = os.path.join(ONNX_DIR, "text_encoder.onnx")
-print(f"\nExporting Text Encoder to {text_onnx_path}...")
+print("Exporting...")
+with torch.no_grad():
+    # Always sanity-run once to catch shape/dtype errors early
+    y = export_model(DUMMY_VIDEO)
+    assert isinstance(y, torch.Tensor), f"Model output must be Tensor for this exporter, got {type(y)}"
+    print(f"Sanity output shape: {tuple(y.shape)}")
 
-torch.onnx.export(
-    text_encoder,
-    DUMMY_TEXT_INPUT,
-    text_onnx_path,
-    input_names=["text"],
-    output_names=["text_embedding"],
-    opset_version=18,
-    do_constant_folding=True,
-    dynamic_axes=None,
-    verbose=False,
-    export_params=True,
-    training=torch.onnx.TrainingMode.EVAL,
-    dynamo=True,
-)
+    # Prefer opset 18 (matches your example)
+    # Try dynamo=True first, fallback to classic exporter if it fails.
+    try:
+        torch.onnx.export(
+            export_model,
+            DUMMY_VIDEO,
+            onnx_path,
+            input_names=["video"],
+            output_names=["logits"],
+            opset_version=18,
+            do_constant_folding=True,
+            dynamic_axes=dynamic_axes,
+            verbose=False,
+            export_params=True,
+            training=torch.onnx.TrainingMode.EVAL,
+            dynamo=True,
+        )
+        print("Exported with dynamo=True")
+    except Exception as e:
+        print(f"dynamo export failed ({type(e).__name__}: {e})")
+        print("Retrying with dynamo=False (classic exporter)...")
 
-print("\nExport complete.")
+        torch.onnx.export(
+            export_model,
+            DUMMY_VIDEO,
+            onnx_path,
+            input_names=["video"],
+            output_names=["logits"],
+            opset_version=18,
+            do_constant_folding=True,
+            dynamic_axes=dynamic_axes,
+            verbose=False,
+            export_params=True,
+            training=torch.onnx.TrainingMode.EVAL,
+            dynamo=False,
+        )
+        print("Exported with dynamo=False")
+
+print("Export complete.")
