@@ -1,6 +1,8 @@
 import os
 import torch
+import torchvision
 from qai_hub_models.models.resnet_2plus1d import Model
+from torch import nn
 
 try:
     from torchvision.models.video import r2plus1d_18, R2Plus1D_18_Weights
@@ -14,7 +16,7 @@ except Exception:
 # 0. Configuration
 # -----------------------------
 ONNX_DIR = "exported_onnx"
-ONNX_NAME = "r2plus1d.onnx"
+ONNX_NAME = "r2plus1dQEVD"
 
 device = torch.device("cpu")  # export on CPU to avoid device issues
 os.makedirs(ONNX_DIR, exist_ok=True)
@@ -44,12 +46,15 @@ def load_model():
         )
 
     # Option A: pretrained torchvision weights 
-    model = r2plus1d_18(weights=R2Plus1D_18_Weights.DEFAULT)
+    # model = r2plus1d_18(weights=R2Plus1D_18_Weights.DEFAULT)
 
     # Option B: your finetuned checkpoint:
-    # ckpt = torch.load("path/to/checkpoint.pt", map_location="cpu")
-    # model.load_state_dict(ckpt["state_dict"] if "state_dict" in ckpt else ckpt, strict=True)
-
+    num_classes = 92  #adjust to the proper amount of output classes
+    model = torchvision.models.get_model("r2plus1d_18")
+    model.fc = nn.Linear(model.fc.in_features, num_classes)
+    ckpt = torch.load("./model_29.pth", map_location="cpu", weights_only=False)
+    model.load_state_dict(ckpt["model"] if "model" in ckpt else ckpt, strict=True)
+    
     return model
 
 
@@ -150,4 +155,4 @@ with torch.no_grad():
         print("Exported with dynamo=False")
 
 
-print("Export complete.")
+print("Export complete and successful.")

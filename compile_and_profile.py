@@ -5,7 +5,7 @@ import sys
 
 # --- Configuration ---
 ONNX_DIR = "exported_onnx"
-VIDEO_ONNX_NAME = "r2plus1d.onnx"   # change if you named it differently
+VIDEO_ONNX_NAME = "r2plus1dQEVD"   # change if you named it differently
 DEVICE_NAME = "Snapdragon 8 Elite QRD"
 
 # Must match your export dummy input
