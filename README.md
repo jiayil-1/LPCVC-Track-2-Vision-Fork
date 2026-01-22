@@ -3,21 +3,21 @@
 This repository contains the solution for LPCVC 2025 Track 2: Video Classification with Dynamic Frame Selection. Our approach modifies PyTorch Vision's video classification pipeline to handle the QEVD dataset with optimized frame sampling.
 
 ## :fire: Overview
+
 - Modified `pytorch/vision` for dynamic frame selection
 - Implemented dataset preprocessing utilities for QEVD
 - Added video validation and corruption checking tools
-- Trained sample solution 
+- Trained sample solution
 
 ---
 
 ## :rocket: Sample Solution
 
-Try out the sample solution [here](https://drive.google.com/file/d/1vAJdpMRdJZPOPSkcVDyKu2MXOXb8qyiS/view?usp=drive_link). Read about training and evaluating the solution in the steps below. 
+Try out the sample solution [here](https://drive.google.com/file/d/1vAJdpMRdJZPOPSkcVDyKu2MXOXb8qyiS/view?usp=drive_link). Read about training and evaluating the solution in the steps below.
 
 ---
 
 ## 0. Environment Setup :wrench:
-
 
 ### Install Dependencies
 
@@ -35,14 +35,18 @@ This will install all the packages used for data preprocessing, model training, 
 
 We modified the following files from the `pytorch/vision` repository:
 
-| File | Description |
-|------|-------------|
+| File                                       | Description                                |
+| ------------------------------------------ | ------------------------------------------ |
 | `references/video_classification/train.py` | Training script with custom configurations |
-| `torchvision/datasets/video_utils.py` | Dynamic frame selection implementation |
+| `torchvision/datasets/video_utils.py`      | Dynamic frame selection implementation     |
 
 ---
 
 ## 2. Dataset Preprocessing :open_file_folder:
+
+### :file_folder: Downloading the QEVD Dataset
+
+To download the dataset, please refer to the instructions at the link associated with Qualcomm's [QEVD Dataset](https://www.qualcomm.com/developer/software/qevd-dataset)
 
 ### :point_right: Refactoring the QEVD Dataset
 
@@ -62,6 +66,7 @@ refactor.refactor_dataset()
 ```
 
 The script organizes videos into the following structure:
+
 ```
 root/
 ├── train/
@@ -102,7 +107,7 @@ We modified `compute_clips_for_video()` in `torchvision/datasets/video_utils.py`
 if total_frames < num_frames:
     # Calculate video duration
     video_duration = len(video_pts) / fps
-    
+
     total_frames = num_frames
     frame_rate = math.ceil(num_frames / video_duration)
 ```
@@ -129,18 +134,19 @@ python references/video_classification/train.py \
 
 ### :gear: Key Parameters
 
-| Parameter | Description | Example |
-|-----------|-------------|---------|
-| `--data-path` | Path to dataset root (`root/train` or `val/action_categories`) | `./full_dataset/` |
-| `--resume` | Path to checkpoint for resuming training | `./checkpoint.pth` |
-| `--start-epoch` | Starting epoch when resuming from checkpoint | `10` |
-| `--weights` | Pre-trained weights to use | `KINETICS400_V1` |
-| `--cache-dataset` | Cache processed dataset for faster loading | (flag) |
-| `--batch-size` | Batch size per GPU | `24` |
-| `--epochs` | Total number of epochs | `15` |
-| `--lr` | Initial learning rate | `0.01` |
+| Parameter         | Description                                                    | Example            |
+| ----------------- | -------------------------------------------------------------- | ------------------ |
+| `--data-path`     | Path to dataset root (`root/train` or `val/action_categories`) | `./full_dataset/`  |
+| `--resume`        | Path to checkpoint for resuming training                       | `./checkpoint.pth` |
+| `--start-epoch`   | Starting epoch when resuming from checkpoint                   | `10`               |
+| `--weights`       | Pre-trained weights to use                                     | `KINETICS400_V1`   |
+| `--cache-dataset` | Cache processed dataset for faster loading                     | (flag)             |
+| `--batch-size`    | Batch size per GPU                                             | `24`               |
+| `--epochs`        | Total number of epochs                                         | `15`               |
+| `--lr`            | Initial learning rate                                          | `0.01`             |
 
 ### :warning: Important Notes
+
 - For distributed training, it's recommended to pre-compute the dataset cache on a single GPU first
 - The model uses `r2plus1d_18` architecture by default
 - Layer freezing is enabled for faster training (only `layer4` and `fc` are trainable)
@@ -165,6 +171,7 @@ python references/video_classification/train.py \
 ### :bar_chart: Evaluation Metrics
 
 The validation process reports:
+
 - **Clip Accuracy (Acc@1, Acc@5)**: Accuracy per video clip
 - **Video Accuracy (Acc@1, Acc@5)**: Aggregated accuracy across all clips of a video
 
@@ -183,5 +190,3 @@ for b in range(video.size(0)):
 
 - Built on [PyTorch Vision](https://github.com/pytorch/vision)
 - Dataset: QEVD (Query-based Event Video Dataset)
-
-
