@@ -11,13 +11,36 @@ This repository contains the solution for LPCVC 2025 Track 2: Video Classificati
 
 ---
 
-## :rocket: Sample Solution
-
-Try out the sample solution [here](https://drive.google.com/file/d/1vAJdpMRdJZPOPSkcVDyKu2MXOXb8qyiS/view?usp=drive_link). Read about training and evaluating the solution in the steps below.
-
----
-
 ## 0. Environment Setup :wrench:
+
+### :point_right: Prerequisites
+
+Make sure you have Python 3.8 or higher installed on your system.
+
+### Optional: Create a Virtual Environment
+
+You can use a virtual environment to avoid dependency conflicts for the Track 2 repository. Create and activate one with the following:
+
+**On Windows (Command Prompt):**
+
+```bash
+python -m venv venv
+venv\Scripts\activate
+```
+
+**On Windows (PowerShell):**
+
+```bash
+python -m venv venv
+venv\Scripts\Activate.ps1
+```
+
+**On macOS/Linux:**
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
 
 ### Install Dependencies
 
@@ -43,10 +66,6 @@ We modified the following files from the `pytorch/vision` repository:
 ---
 
 ## 2. Dataset Preprocessing :open_file_folder:
-
-### :file_folder: Downloading the QEVD Dataset
-
-To download the dataset, please refer to the instructions at the link associated with Qualcomm's [QEVD Dataset](https://www.qualcomm.com/developer/software/qevd-dataset)
 
 ### :point_right: Refactoring the QEVD Dataset
 
