@@ -7,6 +7,11 @@ This repository contains the solution for LPCVC 2025 Track 2: Video Classificati
 - Implemented dataset preprocessing utilities for QEVD
 - Added video validation and corruption checking tools
 - Trained sample solution 
+
+## :rocket: Sample Solution
+
+Try out the sample solution [here](https://drive.google.com/file/d/1vAJdpMRdJZPOPSkcVDyKu2MXOXb8qyiS/view?usp=drive_link). Read about training and evaluating the solution in the steps below. 
+
 ---
 
 ## 0. Environment Setup :wrench:
