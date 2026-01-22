@@ -1,7 +1,13 @@
 torch
+torchvision
 qai_hub
 qai_hub_models
 onnx
 onnxruntime
 onnxscript
+Pillow
+numpy
+av
+scipy
+pycocotools
 wheel
