@@ -11,6 +11,14 @@ This repository contains the solution for LPCVC 2025 Track 2: Video Classificati
 
 ---
 
+---
+
+## :rocket: Sample Solution
+
+Try out the sample solution consisting of our most recent modal checkpoint [here](https://drive.google.com/file/d/1vAJdpMRdJZPOPSkcVDyKu2MXOXb8qyiS/view?usp=drive_link). Read about training and evaluating the solution in the steps below.
+
+---
+
 ## 0. Environment Setup :wrench:
 
 ### :point_right: Prerequisites
