@@ -11,31 +11,6 @@ This repository contains the solution for LPCVC 2025 Track 2: Video Classificati
 
 ## 0. Environment Setup :wrench:
 
-### :point_right: Prerequisites
-
-Make sure you have Python 3.8 or higher installed on your system.
-
-### Optional: Create a Virtual Environment
-
-You can use a virtual environment to avoid dependency conflicts for the Track 2 repository. Create and activate one with the following:
-
-**On Windows (Command Prompt):**
-```bash
-python -m venv venv
-venv\Scripts\activate
-```
-
-**On Windows (PowerShell):**
-```bash
-python -m venv venv
-venv\Scripts\Activate.ps1
-```
-
-**On macOS/Linux:**
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
 
 ### Install Dependencies
 
