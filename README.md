@@ -11,11 +11,9 @@ This repository contains the solution for LPCVC 2025 Track 2: Video Classificati
 
 ---
 
----
-
 ## :rocket: Sample Solution
 
-Try out the sample solution consisting of our most recent modal checkpoint [here](https://drive.google.com/file/d/1vAJdpMRdJZPOPSkcVDyKu2MXOXb8qyiS/view?usp=drive_link). Read about training and evaluating the solution in the steps below.
+Try out the sample solution consisting of our most recent model checkpoint [here](https://drive.google.com/file/d/1vAJdpMRdJZPOPSkcVDyKu2MXOXb8qyiS/view?usp=drive_link). Read about training and evaluating the solution in the steps below.
 
 ---
 
@@ -25,34 +23,39 @@ Try out the sample solution consisting of our most recent modal checkpoint [here
 
 Make sure you have Python 3.8 or higher installed on your system.
 
-### Optional: Create a Virtual Environment
+### Optional (recommended): Create a conda Environment
 
-You can use a virtual environment to avoid dependency conflicts for the Track 2 repository. Create and activate one with the following:
+You can use a conda environment to avoid dependency conflicts for the Track 2 repository. Create and activate one with the following:
 
-**On Windows (Command Prompt):**
+Please ensure that you have [Anaconda](https://www.anaconda.com/download) or [Miniconda](https://www.anaconda.com/docs/getting-started/miniconda/install) downloaded.
+
+After installation, open Anaconda Prompt or Terminal through Start Menu and verify conda is working by typing this:
 
 ```bash
-python -m venv venv
-venv\Scripts\activate
+conda --version
 ```
 
-**On Windows (PowerShell):**
+Create a new conda environment by running the following command, naming the environment whatever you'd like
 
 ```bash
-python -m venv venv
-venv\Scripts\Activate.ps1
+conda create --name lpcvc
 ```
 
-**On macOS/Linux:**
+Activate the conda environment that you crated by running the following command
 
 ```bash
-python3 -m venv venv
-source venv/bin/activate
+conda activate lpcvc
+```
+
+If you ever need to deactivate from the conda environment, you can run the following command
+
+```bash
+conda deactivate
 ```
 
 ### Install Dependencies
 
-Run this command to install the Python dependencies
+Run this command to install the Python dependencies regardless if you are in an enviroment
 
 ```bash
 pip install -r requirements.txt
