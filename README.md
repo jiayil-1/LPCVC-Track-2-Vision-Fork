@@ -21,7 +21,7 @@ Try out the sample solution consisting of our most recent model checkpoint [here
 
 ### :point_right: Prerequisites
 
-Make sure you have Python 3.8 or higher installed on your system.
+Make sure you have Python 3.10 or higher installed on your system. This repository was tested with 3.10.
 
 ### Optional (recommended): Create a conda Environment
 
@@ -29,25 +29,25 @@ You can use a conda environment to avoid dependency conflicts for the Track 2 re
 
 Please ensure that you have [Anaconda](https://www.anaconda.com/download) or [Miniconda](https://www.anaconda.com/docs/getting-started/miniconda/install) downloaded.
 
-After installation, open Anaconda Prompt or Terminal through Start Menu and verify conda is working by typing this:
+To verify installation, open Anaconda Prompt or Terminal through Start Menu and type this:
 
 ```bash
 conda --version
 ```
 
-Create a new conda environment by running the following command, naming the environment whatever you'd like
+Create a new conda environment by running the following command, naming the environment whatever you'd like:
 
 ```bash
-conda create --name lpcvc
+conda create --name lpcvc python=3.10 -y
 ```
 
-Activate the conda environment that you crated by running the following command
+Activate the conda environment that you crated by running the following command:
 
 ```bash
 conda activate lpcvc
 ```
 
-If you ever need to deactivate from the conda environment, you can run the following command
+If you ever need to deactivate from the conda environment, you can run the following command:
 
 ```bash
 conda deactivate
