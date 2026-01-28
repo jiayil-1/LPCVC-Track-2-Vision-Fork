@@ -1,6 +1,6 @@
 # LPCVC-Track-2 :movie_camera: :zap:
 
-This repository contains the solution for LPCVC 2025 Track 2: Video Classification with Dynamic Frame Selection. Our approach modifies PyTorch Vision's video classification pipeline to handle the QEVD dataset with optimized frame sampling.
+This repository contains the solution for LPCVC 2026 Track 2: Video Classification with Dynamic Frame Selection. Our approach modifies PyTorch Vision's video classification pipeline to handle the QEVD dataset with optimized frame sampling.
 
 ## :fire: Overview
 
@@ -55,7 +55,7 @@ conda deactivate
 
 ### Install Dependencies
 
-Run this command to install the Python dependencies regardless if you are in an enviroment
+Run this command to install the Python dependencies regardless if you are in an enviroment:
 
 ```bash
 pip install -r requirements.txt
