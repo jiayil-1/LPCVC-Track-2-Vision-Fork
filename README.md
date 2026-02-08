@@ -130,27 +130,7 @@ python check_videos.py --root ./full_dataset \
 
 ---
 
-## 3. Dynamic Frame Selection :film_strip:
-
-### :bulb: Key Modification
-
-We modified `compute_clips_for_video()` in `torchvision/datasets/video_utils.py` to implement dynamic frame selection for videos with fewer frames than required.
-
-```python
-# Dynamic frame rate adjustment in video_utils.py
-if total_frames < num_frames:
-    # Calculate video duration
-    video_duration = len(video_pts) / fps
-
-    total_frames = num_frames
-    frame_rate = math.ceil(num_frames / video_duration)
-```
-
-This ensures that short videos are properly sampled by dynamically adjusting the frame rate.
-
----
-
-## 4. Training the Model :weight_lifting:
+## 3. Training the Model :weight_lifting:
 
 ### :point_right: Training Command
 
@@ -189,7 +169,7 @@ python references/video_classification/train.py \
 
 ---
 
-## 5. Model Validation :white_check_mark:
+## 4. Model Validation :white_check_mark:
 
 ### :point_right: Validation Command
 
