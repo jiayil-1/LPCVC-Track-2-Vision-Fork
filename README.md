@@ -203,4 +203,4 @@ for b in range(video.size(0)):
 ## :link: References
 
 - Built on [PyTorch Vision](https://github.com/pytorch/vision)
-- Dataset: QEVD (Query-based Event Video Dataset)
+- Dataset: QEVD (Qualcomm Excercise Video Dataset)
