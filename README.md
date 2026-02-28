@@ -453,4 +453,4 @@ Raw videos
 
 - Built on [PyTorch Vision](https://github.com/pytorch/vision)
 - Dataset: QEVD (Query-based Event Video Dataset)
-- [Qualcomm AI Hub](https://aihub.qualcomm.com)
+- [Qualcomm AI Hub ResNet Model](https://github.com/qualcomm/ai-hub-models/tree/main/qai_hub_models/models/resnet_2plus1d)
