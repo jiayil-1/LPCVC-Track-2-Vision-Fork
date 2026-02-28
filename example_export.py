@@ -316,22 +316,25 @@ def export_model(
         **get_model_kwargs(Model, dict(**additional_model_kwargs, precision=precision))
     )
     
-    # --- Custom Model Patching (matches our pipeline) ---
+    # --- Custom Model Patching ---
+    # Replace the final classification head to match your number of output classes.
     import torch.nn as nn
     import torch
-    num_classes = 92
+    num_classes = 92  # TODO: set this to the number of classes in your dataset
     model.model.fc = nn.Linear(model.model.fc.in_features, num_classes)
 
-    if os.path.exists("./model.pth"): ## Upload path to model checkpoint here
+    if os.path.exists("./model.pth"):  # Update this path to your model checkpoint
         ckpt = torch.load("./model.pth", map_location="cpu", weights_only=False)
         model.model.load_state_dict(ckpt["model"] if "model" in ckpt else ckpt, strict=True)
         
-    # Hook the sample inputs — uses ONLY the first tensor found (single-sample sanity check).
+    # Provide a real sample input for the inference sanity check.
+    # If data_dir is set to a directory of preprocessed .npy tensors, the first
+    # tensor found will be used. Otherwise a random tensor is used as a fallback.
     def custom_sample_inputs(input_spec=None):
         import numpy as np
 
         # Update data_dir to match your data preprocessed input tensors 
-        data_dir = ""   
+        data_dir = ""
 
         # Read the target frame count from the input_spec the framework passes in.
         # This ensures the tensor always matches what the compiled model was built for
@@ -360,9 +363,9 @@ def export_model(
 
     model._sample_inputs_impl = custom_sample_inputs
     # ----------------------------------------------------
-    
-    # Match the T=8 frames used in our pipeline
-    additional_model_kwargs.setdefault("num_frames", 8)
+
+    # Set the number of input frames. Must match what your model was trained/exported with.
+    additional_model_kwargs.setdefault("num_frames", 16)
     
     input_spec = model.get_input_spec(
         **get_input_spec_kwargs(model, additional_model_kwargs)
