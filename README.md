@@ -130,27 +130,7 @@ python check_videos.py --root ./full_dataset \
 
 ---
 
-## 3. Dynamic Frame Selection :film_strip:
-
-### :bulb: Key Modification
-
-We modified `compute_clips_for_video()` in `torchvision/datasets/video_utils.py` to implement dynamic frame selection for videos with fewer frames than required.
-
-```python
-# Dynamic frame rate adjustment in video_utils.py
-if total_frames < num_frames:
-    # Calculate video duration
-    video_duration = len(video_pts) / fps
-
-    total_frames = num_frames
-    frame_rate = math.ceil(num_frames / video_duration)
-```
-
-This ensures that short videos are properly sampled by dynamically adjusting the frame rate.
-
----
-
-## 4. Training the Model :weight_lifting:
+## 3. Training the Model :weight_lifting:
 
 ### :point_right: Training Command
 
@@ -189,7 +169,7 @@ python references/video_classification/train.py \
 
 ---
 
-## 5. Model Validation :white_check_mark:
+## 4. Model Validation :white_check_mark:
 
 ### :point_right: Validation Command
 
@@ -220,7 +200,7 @@ for b in range(video.size(0)):
 
 ---
 
-## 6. AI Hub Deployment :rocket:
+## 5. AI Hub Deployment :rocket:
 
 This section walks through the full pipeline for deploying your trained model to Qualcomm AI Hub — from preprocessing raw videos all the way through on-device inference and accuracy evaluation.
 
@@ -235,7 +215,7 @@ This section walks through the full pipeline for deploying your trained model to
 
 ---
 
-### 6a. Data Preprocessing :floppy_disk:
+### 5a. Data Preprocessing :floppy_disk:
 
 > **Skip this step if you already have preprocessed `.npy` tensors saved.**
 
@@ -285,7 +265,7 @@ OUT_ROOT/
 
 ---
 
-### 6b. Exporting and Downloading the Compiled Model :arrow_down:
+### 5b. Exporting and Downloading the Compiled Model :arrow_down:
 
 `example_export.py` is the **primary and recommended** tool for compiling your model on Qualcomm AI Hub and downloading the resulting `.bin` (QNN Context Binary) to your local machine. It handles model tracing, ONNX conversion, AI Hub submission, profiling, and download all in one go.
 
@@ -345,7 +325,7 @@ Profiling and on-Hub inferencing are **skipped by default** (`skip_profiling=Tru
 
 ---
 
-### 6c. Compile & Profile *(Optional)* :chart_with_upwards_trend:
+### 5c. Compile & Profile *(Optional)* :chart_with_upwards_trend:
 
 > :information_source: **This step is optional.** `example_export.py` already compiles (and optionally profiles) the model for you. Use `compile_and_profile.py` only if you already have a standalone ONNX file that you want to compile and profile independently.
 
@@ -376,7 +356,7 @@ This will:
 
 ---
 
-### 6d. On-Device Inference :zap:
+### 5d. On-Device Inference :zap:
 
 Once you have either a compiled `.bin` from `example_export.py` **or** an ONNX file, use `run_inference.py` to run the full dataset through the model on AI Hub and collect the output logits.
 
@@ -426,7 +406,7 @@ The script:
 
 ---
 
-### 6e. Evaluation :bar_chart:
+### 5e. Evaluation :bar_chart:
 
 `evaluate.py` loads the HDF5 output from `run_inference.py`, matches each prediction to the ground-truth label from `manifest.jsonl`, and reports Top-1 and Top-5 accuracy.
 
