@@ -316,7 +316,7 @@ def export_model(
         **get_model_kwargs(Model, dict(**additional_model_kwargs, precision=precision))
     )
     
-    # --- Custom Model Patching ---
+    # --- Custom Model Patching (EDITED) ---
     # Replace the final classification head to match your number of output classes.
     import torch.nn as nn
     import torch
