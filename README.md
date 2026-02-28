@@ -206,12 +206,7 @@ This section walks through the full pipeline for deploying your trained model to
 
 ### :electric_plug: Prerequisites
 
-1. **Install `qai-hub` and `qai-hub-models`** (included in `requirements.txt`)
-2. **Authenticate with Qualcomm AI Hub.** After creating an account at [aihub.qualcomm.com](https://aihub.qualcomm.com), retrieve your API token and run:
-   ```bash
-   qai-hub configure --api_token <YOUR_TOKEN>
-   ```
-3. **Download the model checkpoint** from the [Sample Solution](#rocket-sample-solution) link above (or use your own trained `.pth` file).
+1. **Download the model checkpoint** from the [Sample Solution](#rocket-sample-solution) link above (or use your own trained `.pth` file).
 
 ---
 
@@ -319,9 +314,9 @@ Profiling and on-Hub inferencing are **skipped by default** (`skip_profiling=Tru
 | `--skip-downloading` | Skip downloading the compiled model | `false` |
 | `--output-dir` | Directory to save downloaded model | `./export_assets` |
 
-**Monitor your jobs** on the [AI Hub dashboard](https://aihub.qualcomm.com/compute/jobs). The downloaded model (`.bin`) will be under `./export_assets/` and is required for `run_inference.py`.
+The downloaded model (`.bin`) will be under `./export_assets/` and is required for `run_inference.py`.
 
-> :bulb: **Why use `example_export.py` over a manual ONNX export?** The `example_export.py` pipeline uses the official `qai_hub_models` compilation path, which applies QNN-level graph optimisations and correctly handles normalisation layers. In testing, this yielded significantly better on-device accuracy than a manual `torch.onnx.export` → `compile_and_profile.py` workflow.
+> :bulb: **Why use `example_export.py` over a manual ONNX export?** The `example_export.py` pipeline uses the official `qai_hub_models` compilation path, which applies QNN-level graph optimizations and correctly handles normalization layers. In testing, this yielded significantly better on-device accuracy than a manual `torch.onnx.export` → `compile_and_profile.py` workflow.
 
 ---
 
@@ -352,7 +347,6 @@ This will:
 1. Load and validate the ONNX model.
 2. Submit a compile job to AI Hub (`--target_runtime qnn_context_binary`).
 3. Wait for compilation to finish, then immediately submit a profile job.
-4. Print the compile and profile job IDs — check progress on the [AI Hub dashboard](https://aihub.qualcomm.com/compute/jobs).
 
 ---
 
@@ -422,22 +416,6 @@ python evaluate.py \
     --h5 dataset-export.h5 \
     --manifest /path/to/preprocessed_tensors/manifest.jsonl \
     --class_map class_map.json
-```
-
-**Arguments:**
-
-| Argument | Required | Description |
-|---|---|---|
-| `--h5` | ✅ | Path to the HDF5 logits file from `run_inference.py` |
-| `--manifest` | ✅ | Path to `manifest.jsonl` from `preprocess_and_save.py` |
-| `--class_map` | ❌ | Path to `class_map.json` (default: `class_map.json` in CWD) |
-| `--verbose` | ❌ | Print the first 10 per-sample predictions for a quick sanity check |
-
-**Example output:**
-
-```
-Top-1 Accuracy: 72.45%
-Top-5 Accuracy: 93.10%
 ```
 
 For a quick sanity check on a single sample, first set `USE_SINGLE_TENSOR = True` in `run_inference.py`, run inference, then run `evaluate.py --verbose`.
