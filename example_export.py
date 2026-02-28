@@ -321,14 +321,18 @@ def export_model(
     import torch
     num_classes = 92
     model.model.fc = nn.Linear(model.model.fc.in_features, num_classes)
-    if os.path.exists("./model_29.pth"):
-        ckpt = torch.load("./model_29.pth", map_location="cpu", weights_only=False)
+
+    if os.path.exists("./model.pth"): ## Upload path to model checkpoint here
+        ckpt = torch.load("./model.pth", map_location="cpu", weights_only=False)
         model.model.load_state_dict(ckpt["model"] if "model" in ckpt else ckpt, strict=True)
         
     # Hook the sample inputs — uses ONLY the first tensor found (single-sample sanity check).
     def custom_sample_inputs(input_spec=None):
         import numpy as np
-        data_dir = "./preprocessed/test8"
+
+        # Update data_dir to match your data preprocessed input tensors 
+        data_dir = ""   
+
         # Read the target frame count from the input_spec the framework passes in.
         # This ensures the tensor always matches what the compiled model was built for
         # (e.g. 16 for QNN_CONTEXT_BINARY, 8 if you override num_frames=8).
@@ -363,8 +367,6 @@ def export_model(
     input_spec = model.get_input_spec(
         **get_input_spec_kwargs(model, additional_model_kwargs)
     )
-    # # FORCE override the shape to 8 frames, just to be bulletproof for the backend
-    # input_spec["video"] = ((1, 3, 8, 112, 112), "float32")
 
     # 2. Converts the PyTorch model to ONNX and quantizes the ONNX model.
     quantize_job: hub.client.QuantizeJob | None = None
